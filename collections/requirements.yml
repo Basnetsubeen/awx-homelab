@@ -1,3 +1,5 @@
 collections:
   - name: netbox.netbox
     version: ">=3.0.0"
+  - name: ansible.netcommon
+  - name: community.general
