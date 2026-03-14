@@ -1,0 +1,14 @@
+plugin: netbox.netbox.nb_inventory
+api_endpoint: http:192.168.99.20
+token: 8bcdd2cf53d3a5dcb451cef76ce5329b74423520
+validate_certs: false
+config_context: true
+group_by:
+  - site
+  - device_role
+  - platform
+  - tags
+device_query_filters:
+  - status: active
+compose:
+  ansible_host: primary_ip4.address | ipaddr('address')
