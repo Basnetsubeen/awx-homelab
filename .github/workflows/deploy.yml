@@ -1,0 +1,49 @@
+name: Deploy Network Config
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Sync AWX Project
+        run: |
+          echo "Syncing AWX Project..."
+          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/projects/10/update/" \
+          -u admin:${{ secrets.AWX_PASSWORD }} \
+          -H "Content-Type: application/json"
+          echo "Waiting for sync..."
+          sleep 30
+
+      - name: Run Cisco NTP Job
+        run: |
+          echo "Running Cisco NTP job..."
+          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/12/launch/" \
+          -u admin:${{ secrets.AWX_PASSWORD }} \
+          -H "Content-Type: application/json"
+          sleep 30
+
+      - name: Run Cisco SNMP Job
+        run: |
+          echo "Running Cisco SNMP job..."
+          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/13/launch/" \
+          -u admin:${{ secrets.AWX_PASSWORD }} \
+          -H "Content-Type: application/json"
+          sleep 30
+
+      - name: Run SRX NTP and SNMP Job
+        run: |
+          echo "Running SRX NTP and SNMP job..."
+          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/14/launch/" \
+          -u admin:${{ secrets.AWX_PASSWORD }} \
+          -H "Content-Type: application/json"
+          sleep 30
+
+      - name: All jobs triggered successfully
+        run: echo "✅ All network config jobs triggered!"
