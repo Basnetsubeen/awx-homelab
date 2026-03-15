@@ -15,28 +15,28 @@ jobs:
       - name: Sync AWX Project
         run: |
           echo "Syncing AWX Project..."
-          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/projects/10/update/" \
+          curl -s -X POST "http://192.168.99.21:30080/api/v2/projects/10/update/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
           sleep 30
 
       - name: Run Cisco NTP Job
         run: |
-          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/12/launch/" \
+          curl -s -X POST "http://192.168.99.21:30080/api/v2/job_templates/12/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
           sleep 30
 
       - name: Run Cisco SNMP Job
         run: |
-          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/13/launch/" \
+          curl -s -X POST "http://192.168.99.21:30080/api/v2/job_templates/13/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
           sleep 30
 
       - name: Run SRX NTP and SNMP Job
         run: |
-          curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/14/launch/" \
+          curl -s -X POST "http://192.168.99.21:30080/api/v2/job_templates/14/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
           sleep 30
