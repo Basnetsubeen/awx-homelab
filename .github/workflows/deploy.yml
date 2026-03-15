@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -18,12 +18,10 @@ jobs:
           curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/projects/10/update/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
-          echo "Waiting for sync..."
           sleep 30
 
       - name: Run Cisco NTP Job
         run: |
-          echo "Running Cisco NTP job..."
           curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/12/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
@@ -31,7 +29,6 @@ jobs:
 
       - name: Run Cisco SNMP Job
         run: |
-          echo "Running Cisco SNMP job..."
           curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/13/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
@@ -39,11 +36,10 @@ jobs:
 
       - name: Run SRX NTP and SNMP Job
         run: |
-          echo "Running SRX NTP and SNMP job..."
           curl -s -X POST "${{ secrets.AWX_URL }}/api/v2/job_templates/14/launch/" \
           -u admin:${{ secrets.AWX_PASSWORD }} \
           -H "Content-Type: application/json"
           sleep 30
 
-      - name: All jobs triggered successfully
-        run: echo "✅ All network config jobs triggered!"
+      - name: Done
+        run: echo "✅ All jobs triggered!"
