@@ -2,14 +2,13 @@
 - name: Configure NTP on Cisco Switch
   hosts: CISCO-SW-01
   gather_facts: false
+  connection: network_cli
 
   vars:
-    ansible_connection: network_cli
     ansible_network_os: ios
     ansible_user: admin
     ansible_become: true
     ansible_become_method: enable
-    ansible_paramiko_host_key_auto_add: true
 
   tasks:
     - name: Configure NTP server
