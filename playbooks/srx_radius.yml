@@ -12,7 +12,6 @@
 
   tasks:
 
-    # ─── RADIUS Servers ────────────────────────────────
     - name: Configure primary RADIUS server
       junipernetworks.junos.junos_config:
         lines:
@@ -33,25 +32,19 @@
           - set access radius-server 75.2.116.112 retry 3
           - set access radius-server 75.2.116.112 source-address 192.168.99.1
 
-    # ─── Authentication Order ──────────────────────────
     - name: Configure system authentication order
       junipernetworks.junos.junos_config:
         lines:
           - set system authentication-order radius
           - set system authentication-order password
 
-    # ─── Access Profile ────────────────────────────────
     - name: Configure access profile
       junipernetworks.junos.junos_config:
         lines:
           - set access profile JUMPCLOUD authentication-order radius
           - set access profile JUMPCLOUD radius authentication-server 76.223.67.151
           - set access profile JUMPCLOUD radius authentication-server 75.2.116.112
-          - set access profile JUMPCLOUD accounting order radius
-          - set access profile JUMPCLOUD accounting radius-server 76.223.67.151
-          - set access profile JUMPCLOUD accounting radius-server 75.2.116.112
 
-    # ─── Accounting ────────────────────────────────────
     - name: Configure system accounting
       junipernetworks.junos.junos_config:
         lines:
