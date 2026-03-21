@@ -45,12 +45,16 @@
           - set access profile JUMPCLOUD radius authentication-server 76.223.67.151
           - set access profile JUMPCLOUD radius authentication-server 75.2.116.112
 
-    - name: Configure system accounting
+    - name: Configure system accounting events
       junipernetworks.junos.junos_config:
         lines:
           - set system accounting events login
           - set system accounting events change-log
           - set system accounting events interactive-commands
+
+    - name: Configure accounting destination
+      junipernetworks.junos.junos_config:
+        lines:
           - set system accounting destination radius
 
     - name: Commit configuration
