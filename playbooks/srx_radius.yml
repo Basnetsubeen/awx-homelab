@@ -1,0 +1,60 @@
+---
+- name: Configure RADIUS on Juniper SRX320
+  hosts: juniper-srx320
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.netconf
+    ansible_network_os: junipernetworks.junos.junos
+    ansible_user: admin
+    ansible_port: 830
+    ansible_host: 192.168.99.1
+
+    # JumpCloud RADIUS details
+    radius_primary: "76.223.67.151"
+    radius_secondary: "75.2.116.112"
+    radius_secret: "HomeLab@RADIUS123!"
+
+  tasks:
+
+    # ─── RADIUS Servers ────────────────────────────────
+    - name: Configure primary RADIUS server
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access radius-server {{ radius_primary }} port 1812
+          - set access radius-server {{ radius_primary }} accounting-port 1813
+          - set access radius-server {{ radius_primary }} secret {{ radius_secret }}
+          - set access radius-server {{ radius_primary }} timeout 5
+          - set access radius-server {{ radius_primary }} retry 3
+
+    - name: Configure secondary RADIUS server
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access radius-server {{ radius_secondary }} port 1812
+          - set access radius-server {{ radius_secondary }} accounting-port 1813
+          - set access radius-server {{ radius_secondary }} secret {{ radius_secret }}
+          - set access radius-server {{ radius_secondary }} timeout 5
+          - set access radius-server {{ radius_secondary }} retry 3
+
+    # ─── Authentication Order ──────────────────────────
+    - name: Configure authentication order
+      junipernetworks.junos.junos_config:
+        lines:
+          - set system authentication-order radius
+          - set system authentication-order password
+
+    # ─── RADIUS Profile ────────────────────────────────
+    - name: Configure RADIUS profile
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access profile JUMPCLOUD-RADIUS authentication-order radius
+          - set access profile JUMPCLOUD-RADIUS radius authentication-server {{ radius_primary }}
+          - set access profile JUMPCLOUD-RADIUS radius authentication-server {{ radius_secondary }}
+          - set access profile JUMPCLOUD-RADIUS accounting order radius
+          - set access profile JUMPCLOUD-RADIUS accounting radius-server {{ radius_primary }}
+          - set access profile JUMPCLOUD-RADIUS accounting radius-server {{ radius_secondary }}
+
+    - name: Commit configuration
+      junipernetworks.junos.junos_config:
+        confirm_commit: true
+        comment: "RADIUS configured via AWX"
