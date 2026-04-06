@@ -1,0 +1,20 @@
+---
+- name: configuring hostname
+  hosts: all
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_become: true
+    ansible_become_method: anisble.netcommon.enable
+    ansible_network_cli_ssh_type: paramiko
+
+  tasks:
+  - name: configuring hostname
+    cisco.ios.ios.config:
+       lines:
+         - hostname HOME-LAB-CORE
+         - banner motd # Authorized users only !! # 
+
