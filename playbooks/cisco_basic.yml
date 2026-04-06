@@ -1,6 +1,6 @@
 ---
-- name: Configuring hostname
-  hosts: HOME-LAB-CORE
+- name: Show Switch Info
+  hosts: CISCO-SW-01
   gather_facts: false
 
   vars:
@@ -12,16 +12,22 @@
     ansible_network_cli_ssh_type: paramiko
 
   tasks:
-    - name: Configuring hostname
-      cisco.ios.ios_config:
-        lines:
-          - hostname HOME-LAB-CORE
+    - name: Get switch version
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: version_output
 
-    - name: Configuring banner
-      cisco.ios.ios_config:
-        lines:
-          - banner motd ^ Authorized Access Only! ^
+    - name: Print version
+      debug:
+        msg: "{{ version_output.stdout_lines }}"
 
-    - name: Save config
-      cisco.ios.ios_config:
-        save_when: always
+    - name: Get interfaces
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+      register: int_output
+
+    - name: Print interfaces
+      debug:
+        msg: "{{ int_output.stdout_lines }}"
