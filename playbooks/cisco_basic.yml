@@ -1,6 +1,6 @@
 ---
-- name: configuring hostname
-  hosts: all
+- name: Configuring hostname
+  hosts: CISCO-SW-01
   gather_facts: false
 
   vars:
@@ -12,9 +12,16 @@
     ansible_network_cli_ssh_type: paramiko
 
   tasks:
-    - name: configuring hostname
-      cisco.ios.ios.config:
+    - name: Configuring hostname
+      cisco.ios.ios_config:
         lines:
           - hostname HOME-LAB-CORE
-          - banner motd # Authorized users only !! #
 
+    - name: Configuring banner
+      cisco.ios.ios_config:
+        lines:
+          - banner motd ^ Authorized Access Only! ^
+
+    - name: Save config
+      cisco.ios.ios_config:
+        save_when: always
