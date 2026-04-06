@@ -1,6 +1,6 @@
 ---
 - name: Configuring hostname
-  hosts: CISCO-SW-01
+  hosts: HOME-LAB-CORE
   gather_facts: false
 
   vars:
