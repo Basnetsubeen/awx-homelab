@@ -9,6 +9,8 @@
     ansible_user: admin
     ansible_port: 830
     ansible_hosts: 192.168.99.1
+    ansible_command_timeout: 120
+    ansible_connect_timeout: 60
 
   tasks:
     - name: grafana_monitoring
