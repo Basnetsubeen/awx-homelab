@@ -1,0 +1,33 @@
+---
+- name: Network Backup Playbook
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    # JUNIPER BACKUP
+    - name: Backup Juniper SRX320
+      junipernetworks.junos.junos_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}.cfg"
+          dir_path: "/tmp/network_backups/"
+      when: ansible_network_os == 'junipernetworks.junos.junos'
+
+    # CISCO BACKUP
+    - name: Backup Cisco Catalyst
+      cisco.ios.ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}.cfg"
+          dir_path: "/tmp/network_backups/"
+      when: ansible_network_os == 'cisco.ios.ios'
+    - name: Push to Gitea
+      delegate_to: localhost  # This runs on the AWX node itself
+      shell: |
+        cd /tmp/network_backups/
+        git init
+        git remote add origin git@192.168.99.25:3000/ubuntu/network-backups.git
+        git add .
+        git commit -m "Automated backup {{ ansible_date_time.date }}"
+        git push origin master
