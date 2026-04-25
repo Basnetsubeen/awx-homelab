@@ -1,0 +1,53 @@
+---
+- name: Configure SNMP on Cisco Switch
+  hosts: CISCO-SW-01
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_become: true
+    ansible_become_method: ansible.netcommon.enable
+    ansible_network_cli_ssh_type: paramiko
+
+  tasks:
+
+    # ─── SNMPv2c ───────────────────────────────────────
+    - name: Configure SNMPv2c read-only community
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server community homelab-ro RO
+          - snmp-server community homelab-rw RW
+
+    - name: Configure SNMP location and contact
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server location Campsie-HomeLab
+          - snmp-server contact admin@homelab.local
+
+    - name: Configure SNMP trap host
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server host 192.168.99.29 version 2c homelab-ro
+          - snmp-server enable traps
+
+    # ─── SNMPv3 ────────────────────────────────────────
+    - name: Configure SNMPv3 group
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server group SNMPV3GROUP v3 priv
+
+    - name: Configure SNMPv3 user
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server user snmpv3user SNMPV3GROUP v3 auth sha AuthPass123! priv aes 128 PrivPass123!
+
+    - name: Configure SNMPv3 trap host
+      cisco.ios.ios_config:
+        lines:
+          - snmp-server host 192.168.99.29 version 3 priv snmpv3user
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always

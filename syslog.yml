@@ -1,0 +1,26 @@
+---
+- name: syslog_config
+  hosts: juniper-srx320
+  gather_facts: false
+
+  vars: 
+    ansible_connection: ansible.netcommon.netconf
+    ansible_network_os: junipernetworks.junos.junos
+    ansible_user: admin
+    ansible_port: 830
+    ansible_hosts: 192.168.99.1
+    ansible_command_timeout: 120
+    ansible_connect_timeout: 60
+
+  tasks:
+    - name: grafana_monitoring
+      junipernetworks.junos.junos_config:
+          lines:
+            - set system syslog host 192.168.99.26 port 1514 any any
+            - set system syslog host 192.168.99.26 port 1514 structured-data
+
+    - name: commit cofiguration
+      junipernetworks.junos.junos_config:
+         confirm_commit: true
+         comment: "SYSLOG configured via AWX" 
+

@@ -1,0 +1,52 @@
+---
+- name: Restrict SSH to RADIUS only on Cisco Switch
+  hosts: CISCO-SW-01
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_become: true
+    ansible_become_method: ansible.netcommon.enable
+    ansible_network_cli_ssh_type: paramiko
+
+  tasks:
+
+    # ─── Console Auth ──────────────────────────────────
+    - name: Create local-only authentication for console
+      cisco.ios.ios_config:
+        lines:
+          - aaa authentication login LOCAL-ONLY local
+          - aaa authentication enable LOCAL-ONLY-ENABLE local
+
+    # ─── Console Line ──────────────────────────────────
+    - name: Configure console to use local auth only
+      cisco.ios.ios_config:
+        lines:
+          - login authentication LOCAL-ONLY
+          - exec-timeout 60 0
+        parents: line con 0
+
+    # ─── VTY Lines ─────────────────────────────────────
+    - name: Configure VTY to use RADIUS only
+      cisco.ios.ios_config:
+        lines:
+          - login authentication default
+          - authorization exec default
+          - accounting exec default
+          - transport input ssh
+          - exec-timeout 30 0
+        parents: line vty 0 15
+
+    # ─── Disable Local Users on SSH ────────────────────
+    - name: Set service password encryption
+      cisco.ios.ios_config:
+        lines:
+          - service password-encryption
+          - no ip http server
+          - no ip http secure-server
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always

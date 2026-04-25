@@ -1,0 +1,56 @@
+---
+- name: Configure NTP and SNMP on Juniper SRX320
+  hosts: juniper-srx320
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.netconf
+    ansible_network_os: junipernetworks.junos.junos
+    ansible_user: admin
+    ansible_port: 830
+    ansible_host: 192.168.99.1
+
+  tasks:
+
+    # ─── NTP ───────────────────────────────────────────
+    - name: Configure NTP server
+      junipernetworks.junos.junos_config:
+        lines:
+          - set system ntp server pool.ntp.org
+
+    - name: Configure timezone
+      junipernetworks.junos.junos_config:
+        lines:
+          - set system time-zone Australia/Sydney
+
+    # ─── SNMPv2c ───────────────────────────────────────
+    - name: Configure SNMPv2c
+      junipernetworks.junos.junos_config:
+        lines:
+          - set snmp location Campsie-HomeLab
+          - set snmp contact admin@homelab.local
+          - set snmp community homelab-ro authorization read-only
+          - set snmp community homelab-ro clients 192.168.99.29/32
+          - set snmp community homelab-rw authorization read-write
+          - set snmp community homelab-rw clients 192.168.99.29/32
+
+    # ─── SNMPv3 ────────────────────────────────────────
+    - name: Configure SNMPv3 user
+      junipernetworks.junos.junos_config:
+        lines:
+          - set snmp v3 usm local-engine user snmpv3user authentication-sha authentication-password AuthPass123!
+          - set snmp v3 usm local-engine user snmpv3user privacy-aes128 privacy-password PrivPass123!
+          - set snmp v3 vacm security-to-group security-model usm security-name snmpv3user group SNMPV3GROUP
+          - set snmp v3 vacm access group SNMPV3GROUP default-context-prefix security-model usm security-level privacy read-view all
+
+    # ─── SNMP Traps ────────────────────────────────────
+    - name: Configure SNMP traps
+      junipernetworks.junos.junos_config:
+        lines:
+          - set snmp trap-group homelab-traps version v2
+          - set snmp trap-group homelab-traps targets 192.168.99.29
+
+    - name: Commit configuration
+      junipernetworks.junos.junos_config:
+        confirm_commit: true
+        comment: "NTP and SNMP configured via AWX"
