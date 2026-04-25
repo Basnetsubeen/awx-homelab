@@ -1,0 +1,76 @@
+---
+- name: Configure RADIUS on Cisco Switch
+  hosts: CISCO-SW-01
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_become: true
+    ansible_become_method: ansible.netcommon.enable
+    ansible_network_cli_ssh_type: paramiko
+
+    # JumpCloud RADIUS details
+    radius_primary: "76.223.67.151"
+    radius_secondary: "75.2.116.112"
+    radius_secret: "HomeLab@RADIUS123!"
+    radius_auth_port: 1812
+    radius_acct_port: 1813
+
+  tasks:
+
+    # ─── AAA New Model ─────────────────────────────────
+    - name: Enable AAA
+      cisco.ios.ios_config:
+        lines:
+          - aaa new-model
+
+    # ─── RADIUS Servers ────────────────────────────────
+    - name: Configure primary RADIUS server
+      cisco.ios.ios_config:
+        lines:
+          - radius server JUMPCLOUD-PRIMARY
+          - address ipv4 {{ radius_primary }} auth-port {{ radius_auth_port }} acct-port {{ radius_acct_port }}
+          - key {{ radius_secret }}
+        parents: radius server JUMPCLOUD-PRIMARY
+
+    - name: Configure secondary RADIUS server
+      cisco.ios.ios_config:
+        lines:
+          - radius server JUMPCLOUD-SECONDARY
+          - address ipv4 {{ radius_secondary }} auth-port {{ radius_auth_port }} acct-port {{ radius_acct_port }}
+          - key {{ radius_secret }}
+        parents: radius server JUMPCLOUD-SECONDARY
+
+    # ─── AAA Authentication ────────────────────────────
+    - name: Configure AAA authentication
+      cisco.ios.ios_config:
+        lines:
+          - aaa authentication login default group radius local
+          - aaa authentication enable default group radius enable
+          - aaa authorization exec default group radius local
+          - aaa authorization network default group radius
+          - aaa accounting exec default start-stop group radius
+          - aaa accounting network default start-stop group radius
+
+    # ─── VTY Lines ─────────────────────────────────────
+    - name: Configure VTY lines for RADIUS
+      cisco.ios.ios_config:
+        lines:
+          - login authentication default
+          - authorization exec default
+          - accounting exec default
+          - transport input ssh
+        parents: line vty 0 15
+
+    # ─── RADIUS VSA ────────────────────────────────────
+    - name: Enable RADIUS VSA
+      cisco.ios.ios_config:
+        lines:
+          - radius-server vsa send authentication
+          - radius-server vsa send accounting
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always

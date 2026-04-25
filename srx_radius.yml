@@ -1,0 +1,60 @@
+---
+- name: Configure RADIUS on Juniper SRX320
+  hosts: juniper-srx320
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.netconf
+    ansible_network_os: junipernetworks.junos.junos
+    ansible_user: admin
+    ansible_port: 830
+    ansible_host: 192.168.99.1
+
+  tasks:
+
+    - name: Configure primary RADIUS server
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access radius-server 76.223.67.151 port 1812
+          - set access radius-server 76.223.67.151 accounting-port 1813
+          - set access radius-server 76.223.67.151 secret "HomeLab@RADIUS123!"
+          - set access radius-server 76.223.67.151 timeout 5
+          - set access radius-server 76.223.67.151 retry 3
+          - set access radius-server 76.223.67.151 source-address 192.168.99.1
+
+    - name: Configure secondary RADIUS server
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access radius-server 75.2.116.112 port 1812
+          - set access radius-server 75.2.116.112 accounting-port 1813
+          - set access radius-server 75.2.116.112 secret "HomeLab@RADIUS123!"
+          - set access radius-server 75.2.116.112 timeout 5
+          - set access radius-server 75.2.116.112 retry 3
+          - set access radius-server 75.2.116.112 source-address 192.168.99.1
+
+    - name: Configure system authentication order
+      junipernetworks.junos.junos_config:
+        lines:
+          - set system authentication-order radius
+          - set system authentication-order password
+
+    - name: Configure access profile
+      junipernetworks.junos.junos_config:
+        lines:
+          - set access profile JUMPCLOUD authentication-order radius
+          - set access profile JUMPCLOUD radius authentication-server 76.223.67.151
+          - set access profile JUMPCLOUD radius authentication-server 75.2.116.112
+
+    - name: Configure accounting events and destination
+      junipernetworks.junos.junos_config:
+        lines:
+          - set system accounting events login
+          - set system accounting events change-log
+          - set system accounting events interactive-commands
+          - set system accounting destination radius server 76.223.67.151 secret "HomeLab@RADIUS123!"
+          - set system accounting destination radius server 75.2.116.112 secret "HomeLab@RADIUS123!"
+
+    - name: Commit configuration
+      junipernetworks.junos.junos_config:
+        confirm_commit: true
+        comment: "RADIUS configured via AWX"

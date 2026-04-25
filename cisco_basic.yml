@@ -1,0 +1,33 @@
+---
+- name: Show Switch Info
+  hosts: CISCO-SW-01
+  gather_facts: false
+
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_become: true
+    ansible_become_method: ansible.netcommon.enable
+    ansible_network_cli_ssh_type: paramiko
+
+  tasks:
+    - name: Get switch version
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: version_output
+
+    - name: Print version
+      debug:
+        msg: "{{ version_output.stdout_lines }}"
+
+    - name: Get interfaces
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+      register: int_output
+
+    - name: Print interfaces
+      debug:
+        msg: "{{ int_output.stdout_lines }}"
