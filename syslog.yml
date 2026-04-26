@@ -10,6 +10,7 @@
     ansible_port: 830
     ansible_host: 192.168.99.1
     ansible_netconf_ssh_config: null
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
     ansible_command_timeout: 120
     ansible_connect_timeout: 120
 
