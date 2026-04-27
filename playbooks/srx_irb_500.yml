@@ -10,6 +10,8 @@
     ansible_user: admin
     ansible_port: 830
     ansible_host: 192.168.99.1
+    ansible_connect_timeout: 120
+    ansible_command_timeout: 120
 
     #VLAN Details:
     vlan_id: 500
