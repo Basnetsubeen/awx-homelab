@@ -10,8 +10,8 @@
     ansible_user: admin
     ansible_port: 830
     ansible_host: 192.168.99.1
-    
-   #VLAN Details:  
+
+    #VLAN Details:
     vlan_id: 500
     irb_ip: 192.168.250.254/28
 
@@ -27,47 +27,41 @@
     vpn_psk: HomeLab@VPN123!
 
   tasks:
-    - name: Create_VLAN_500
+    - name: Configure VLAN, L3 Interface, and Physical Member
       junipernetworks.junos.junos_config:
-        lines:
-          - set vlans MGMT_Stella_Relay vlan-id 500
-          - set vlans MGMT_Stella_Relay l3-interface irb.500
-          - set interfaces irb unit 500 family inet address 192.168.250.254/28
-          - set interfaces ae0 unit 0 family ethernet-switching vlan members MGMT_Stella_Relay
+        lines: |
+          set vlans MGMT_Stella_Relay vlan-id 500
+          set vlans MGMT_Stella_Relay l3-interface irb.500
+          set interfaces irb unit 500 family inet address 192.168.250.254/28
+          set interfaces ae0 unit 0 family ethernet-switching vlan members MGMT_Stella_Relay
 
-    - name: Create_DHCP_POOL
+    - name: Configure DHCP Server and Pool
       junipernetworks.junos.junos_config:
-        lines:
-          - set access address-assignment pool VLAN500-POOL family inet network 192.168.250.240/28
-          - set access address-assignment pool VLAN500-POOL family inet range VLAN500-RANGE low 192.168.250.241
-          - set access address-assignment pool VLAN500-POOL family inet range VLAN500-RANGE high 192.168.250.253
-          - set access address-assignment pool VLAN500-POOL family inet dhcp-attributes router 192.168.250.254
-          - set access address-assignment pool VLAN500-POOL family inet dhcp-attributes name-server 8.8.8.8
-     
-    - name: Bind DHCP Server to irb.500
+        lines: |
+          set access address-assignment pool VLAN500-POOL family inet network 192.168.250.240/28
+          set access address-assignment pool VLAN500-POOL family inet range VLAN500-RANGE low 192.168.250.241
+          set access address-assignment pool VLAN500-POOL family inet range VLAN500-RANGE high 192.168.250.253
+          set access address-assignment pool VLAN500-POOL family inet dhcp-attributes router 192.168.250.254
+          set access address-assignment pool VLAN500-POOL family inet dhcp-attributes name-server 8.8.8.8
+          set system services dhcp-local-server group MGMT_Stella_Relay overrides process-inform pool VLAN500-POOL
+          set system services dhcp-local-server group MGMT_Stella_Relay interface irb.500
+
+    - name: Configure Security Zones and Policies
       junipernetworks.junos.junos_config:
-        lines:
-          - set system services dhcp-local-server group MGMT_Stella_Relay overrides process-inform pool VLAN500-POOL
-          - set system services dhcp-local-server group MGMT_Stella_Relay interface irb.500
+        lines: |
+          set security zones security-zone vlan500 host-inbound-traffic system-services ping
+          set security zones security-zone vlan500 host-inbound-traffic system-services dhcp
+          set security zones security-zone vlan500 interfaces irb.500
 
-    - name: Creating_Security_Zones_VLAN500
+    - name: Configure Source NAT
       junipernetworks.junos.junos_config:
-        lines: 
-           - set security zones security-zone vlan500 host-inbound-traffic system-services ping
-           - set security zones security-zone vlan500 host-inbound-traffic system-services dhcp
-           - set security zones security-zone vlan500 interfaces irb.500
+        lines: |
+          set security nat source rule-set VLAN500-TO-INTERNET from zone vlan500
+          set security nat source rule-set VLAN500-TO-INTERNET to zone untrust
+          set security nat source rule-set VLAN500-TO-INTERNET rule NAT-VLAN500 match source-address 192.168.254.240/28
+          set security nat source rule-set VLAN500-TO-INTERNET rule NAT-VLAN500 then source-nat interface
 
-    - name: Sournce_NAT_VLAN_500
-      junipernetworks.junos.junos_config: 
-        lines: 
-           - set security nat source rule-set VLAN500-TO-INTERNET from zone vlan500
-           - set security nat source rule-set VLAN500-TO-INTERNET to zone untrust
-           - set security nat source rule-set VLAN500-TO-INTERNET rule NAT-VLAN500 match source-address 192.168.254.240/28
-           - set security nat source rule-set VLAN500-TO-INTERNET rule NAT-VLAN500 then source-nat interface 
-             
-    - name: Commit_Configuration:
-      juipernetworks.junos.junos_config:
-          confirm_commit: true
-          comment: "VLAN 500 CONFIGURATION COMMITTED"
-
-
+    - name: Commit Configuration with Confirmation
+      junipernetworks.junos.junos_config:
+        confirm_commit: true
+        comment: "VLAN 500 CONFIGURATION APPLIED VIA AWX"
